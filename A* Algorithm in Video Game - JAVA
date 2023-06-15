@@ -1,0 +1,136 @@
+package node;
+
+import java.util.ArrayList;
+import java.util.List;
+
+class Node {
+    int x;
+    int y;
+    int g;
+    int h;
+    int f;
+    Node parent;
+
+    public Node(int x, int y) {
+        this.x = x;
+        this.y = y;
+        g = 0;
+        h = 0;
+        f = 0;
+        parent = null;
+    }
+}
+
+class AStarAlgorithm {
+    public static int[][] grid = {
+        {0, 1, 0, 0, 0},
+        {0, 1, 0, 1, 0},
+        {0, 0, 0, 0, 0},
+        {0, 1, 1, 1, 0},
+        {0, 0, 0, 1, 0}
+    };
+
+    public static int gridSizeX = grid.length;
+    public static int gridSizeY = grid[0].length;
+    public static int[][] directions = {{-1, 0}, {0, -1}, {1, 0}, {0, 1}}; // Possible movement directions: Up, Left, Down, Right
+
+    public static boolean isValid(int x, int y) {
+        return x >= 0 && x < gridSizeX && y >= 0 && y < gridSizeY && grid[x][y] == 0;
+    }
+
+    public static int calculateHeuristic(int x, int y, int targetX, int targetY) {
+        // Manhattan distance heuristic
+        return Math.abs(targetX - x) + Math.abs(targetY - y);
+    }
+
+    public static List<Node> findPath(int startX, int startY, int targetX, int targetY) {
+        Node startNode = new Node(startX, startY);
+        Node targetNode = new Node(targetX, targetY);
+
+        List<Node> openList = new ArrayList<>();
+        List<Node> closedList = new ArrayList<>();
+
+        openList.add(startNode);
+
+        while (!openList.isEmpty()) {
+            Node currentNode = openList.get(0);
+            int currentIndex = 0;
+
+            // Find the node with the lowest f value
+            for (int i = 1; i < openList.size(); i++) {
+                if (openList.get(i).f < currentNode.f) {
+                    currentNode = openList.get(i);
+                    currentIndex = i;
+                }
+            }
+
+            openList.remove(currentIndex);
+            closedList.add(currentNode);
+
+            if (currentNode.x == targetNode.x && currentNode.y == targetNode.y) {
+                // Path found, reconstruct the path
+                List<Node> path = new ArrayList<>();
+                Node current = currentNode;
+                while (current != null) {
+                    path.add(current);
+                    current = current.parent;
+                }
+                return path;
+            }
+
+            // Generate neighboring nodes
+            List<Node> neighbors = new ArrayList<>();
+            for (int[] direction : directions) {
+                int newX = currentNode.x + direction[0];
+                int newY = currentNode.y + direction[1];
+
+                if (isValid(newX, newY)) {
+                    Node neighbor = new Node(newX, newY);
+                    neighbors.add(neighbor);
+                }
+            }
+
+            // Process each neighbor
+            for (Node neighbor : neighbors) {
+                if (closedList.contains(neighbor)) {
+                    continue;
+                }
+
+                int tentativeG = currentNode.g + 1;
+                if (!openList.contains(neighbor) || tentativeG < neighbor.g) {
+                    neighbor.parent = currentNode;
+                    neighbor.g = tentativeG;
+                    neighbor.h = calculateHeuristic(neighbor.x, neighbor.y, targetNode.x, targetNode.y);
+                    neighbor.f = neighbor.g + neighbor.h;
+
+                    if (!openList.contains(neighbor)) {
+                        openList.add(neighbor);
+                    }
+                }
+            }
+        }
+
+        // No path found
+        return null;
+    }
+}
+
+public class Main 
+{
+    public static void main(String[] args) {
+        int startX = 0;
+        int startY = 0;
+        int targetX = 4;
+        int targetY = 4;
+
+        List<Node> path = AStarAlgorithm.findPath(startX, startY, targetX, targetY);
+
+        if (path != null) {
+            System.out.println("Path found!");
+            for (Node node : path) {
+                System.out.println("(" + node.x + ", " + node.y + ")");
+            }
+        } else {
+            System.out.println("Path not found.");};
+        }
+}
